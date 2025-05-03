@@ -5,17 +5,7 @@ from streamlit_option_menu import option_menu
 import plotly.express as px
 import pyodbc
 
-def conecta_ao_banco(driver='SQL Server', server='SAMUEL\\MSSQLSERVER01', database='Dados_scraping', trusted_connection="yes"):
-    string_conexao = f"DRIVER={{{driver}}};SERVER={server};DATABASE={database};Trusted_Connection={trusted_connection};"
-    conexao = pyodbc.connect(string_conexao)
-    cursor = conexao.cursor()
-    return conexao, cursor
-
-conexao, cursor = conecta_ao_banco()
-print("Conexão estabelecida!")
-# Consultar a tabela 'ACOES' diretamente e criar o DataFrame
-query = "SELECT * FROM ACOES"
-df = pd.read_sql(query, conexao)
+df = pd.read_json("dados_json2.json", orient="records")
 
 df = df.drop(index=df.index[0:4]).reset_index(drop=True)
 df = df[df['Papel'].notna() & (df['Papel'] != "")]
