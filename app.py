@@ -5,10 +5,17 @@ from streamlit_option_menu import option_menu
 import plotly.express as px
 import pyodbc
 
-df = pd.read_json("dados_json2.json", orient="records")
+def conecta_ao_banco(driver='SQL Server', server='SAMUEL\\MSSQLSERVER01', database='Dados_scraping', trusted_connection="yes"):
+    string_conexao = f"DRIVER={{{driver}}};SERVER={server};DATABASE={database};Trusted_Connection={trusted_connection};"
+    conexao = pyodbc.connect(string_conexao)
+    cursor = conexao.cursor()
+    return conexao, cursor
 
-df = df.drop(index=df.index[0:4]).reset_index(drop=True)
-df = df[df['Papel'].notna() & (df['Papel'] != "")]
+conexao, cursor = conecta_ao_banco()
+print("Conexão estabelecida!")
+# Consultar a tabela 'ACOES' diretamente e criar o DataFrame
+query = "SELECT * FROM ACOES"
+df = pd.read_sql(query, conexao)
 
 def converter_tipo(table):
     for i in df.columns:
@@ -52,7 +59,8 @@ def gerar_grafico(data, valor):
         hoverlabel=dict(bgcolor="yellow", font_color="black"),
         yaxis=dict(categoryorder="total ascending"),
         title=f"Gráfico de {valor}",
-        height=600
+        height=600,
+        dragmode=False  # desativa zoom e pan
     )
     return fig
 
@@ -65,7 +73,7 @@ def graph(df_filtrado, col1, col2=None, col3=None):
     for i, col in enumerate(colunas):
         with cols[i]:
             fig = gerar_grafico(df_filtrado, col)
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
 
 #grafico de linhas
